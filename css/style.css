@@ -1,0 +1,386 @@
+/* css/style.css - 最終修復版 */
+:root {
+    --bg-color: #0f0f13;
+    --primary-gold: #c5a059;
+    --text-main: #e0e0e0;
+    --dialogue-bg: rgba(0, 0, 0, 0.65);
+    --char-theme-color: #c5a059;
+    --font-size-base: 1.25rem; 
+}
+
+body {
+    margin: 0; background-color: #000; color: var(--text-main);
+    font-family: 'Zen Old Mincho', serif;
+    height: 100vh; width: 100vw;
+    overflow: hidden; user-select: none;
+    display: flex; justify-content: center; align-items: center;
+}
+
+/* --- 手機強制橫屏 --- */
+#orientation-lock {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: #000; z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: var(--primary-gold); text-align: center;
+}
+.lock-icon { font-size: 4rem; margin-bottom: 20px; animation: rotate 2s infinite; }
+@keyframes rotate { 0% { transform: rotate(0deg); } 25% { transform: rotate(90deg); } 100% { transform: rotate(90deg); } }
+
+@media screen and (orientation: portrait) {
+    #orientation-lock { display: flex; }
+    #game-container { display: none !important; }
+}
+
+/* --- 背景與容器 --- */
+#scene-bg {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background-size: cover; background-position: center;
+    transition: opacity 0.8s ease; filter: brightness(0.6);
+    z-index: 0;
+}
+
+#game-container {
+    position: relative;
+    aspect-ratio: 16/9;
+    width: 100%; height: 100%; 
+    max-height: 100vh; max-width: 177.78vh; 
+    margin: auto; overflow: hidden; 
+    z-index: 1; 
+}
+
+.layer {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; display: flex; flex-direction: column;
+    justify-content: center; align-items: center; transition: opacity 0.5s ease;
+}
+.interactive { pointer-events: auto; }
+.hidden { opacity: 0; pointer-events: none; z-index: -1; }
+
+/* --- UI 元件 --- */
+.gothic-btn {
+    background: linear-gradient(180deg, #1f1f1f, #0d0d0d);
+    border: 1px solid var(--primary-gold); color: var(--primary-gold);
+    padding: 10px 30px; font-family: 'IM Fell English SC', serif;
+    font-size: 1.5rem; cursor: pointer; letter-spacing: 2px;
+    box-shadow: 0 0 15px rgba(197, 160, 89, 0.15); transition: all 0.2s; position: relative; z-index: 100;
+}
+.gothic-btn:hover { background: #2a2a2a; transform: scale(1.05); }
+
+.gothic-input {
+    background: #000; border: 1px solid var(--primary-gold); color: var(--primary-gold);
+    font-family: 'Zen Old Mincho', serif; font-size: 1.5rem; padding: 10px 20px; text-align: center;
+    margin-bottom: 20px; width: 300px; outline: none; box-shadow: 0 0 10px rgba(197, 160, 89, 0.2);
+}
+
+/* --- 角色與對話 --- */
+#char-layer {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; pointer-events: none;
+    display: flex; justify-content: space-between; align-items: flex-end; padding: 0 5%; box-sizing: border-box; z-index: 5;
+}
+.char-slot {
+    position: absolute; bottom: 0; height: 105%; width: auto; max-width: 45%;
+    transition: all 0.5s ease; opacity: 0; transform: translateY(20px) scale(0.95);
+    filter: brightness(0.5) drop-shadow(0 0 10px rgba(0,0,0,0.5)); transform-origin: bottom center;
+}
+.char-slot.left { left: 5%; z-index: 1; }
+.char-slot.center { left: 50%; transform: translateX(-50%) translateY(20px) scale(0.95); z-index: 2; }
+.char-slot.right { right: 5%; z-index: 1; }
+.char-slot.show { opacity: 1; transform: translateY(10%) scale(1); }
+.char-slot.talking { filter: brightness(1.1) drop-shadow(0 0 20px rgba(0,0,0,0.8)); transform: translateY(10%) scale(1.05); z-index: 10 !important; }
+.char-slot.center.show { transform: translateX(-50%) translateY(10%) scale(1); }
+.char-slot.center.talking { transform: translateX(-50%) translateY(10%) scale(1.05); }
+
+#dialogue-ui {
+    position: absolute; bottom: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: auto; cursor: pointer; display: flex; flex-direction: column; justify-content: flex-end; align-items: center;
+    padding-bottom: 30px; z-index: 50; 
+}
+.dialogue-box {
+    width: 90%; height: 28vh; background: var(--dialogue-bg);
+    border: 1px solid rgba(197, 160, 89, 0.3); border-top: 3px solid var(--primary-gold);
+    backdrop-filter: blur(5px); position: relative; padding: 40px 60px; box-sizing: border-box;
+    opacity: 0; transform: translateY(20px); transition: all 0.5s ease;
+    box-shadow: 0 -10px 50px rgba(0,0,0,0.8);
+}
+.dialogue-box.visible { opacity: 1; transform: translateY(0); }
+
+.name-tag {
+    position: absolute; top: -28px; left: 30px;
+    background: linear-gradient(90deg, var(--char-theme-color) 25%, #000 25%);
+    border: 1px solid var(--primary-gold); border-left: 5px solid var(--char-theme-color);
+    color: var(--primary-gold); padding: 4px 30px 4px 65px;
+    font-family: 'Zen Old Mincho', serif; font-weight: 900; font-size: 1.2rem;
+    box-shadow: 3px 3px 15px rgba(0,0,0,0.9); transform: skewX(-15deg);
+    min-width: 140px; opacity: 0; margin-left: -30px; transition: opacity 0.4s ease, margin-left 0.4s ease;
+}
+.name-tag.enter { opacity: 1; margin-left: 0; }
+.name-tag span { display: block; transform: skewX(15deg); }
+
+.dialogue-text {
+    font-size: var(--font-size-base); line-height: 1.8; color: #f0f0f0;
+    margin-top: 5px; text-shadow: 1px 1px 2px #000; font-weight: 500; letter-spacing: 0.5px;
+}
+.next-indicator {
+    position: absolute; bottom: 20px; right: 30px; width: 15px; height: 15px; background: var(--primary-gold); transform: rotate(45deg); animation: pulse 1s infinite;
+}
+
+/* --- 全螢幕 Modal 與 選項 --- */
+/* ★ 這裡使用 fixed 確保覆蓋全螢幕 */
+.modal-overlay { 
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
+    background: rgba(0, 0, 0, 0.85); z-index: 2000; 
+    backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; 
+    opacity: 0; pointer-events: none; transition: opacity 0.3s; 
+}
+.modal-overlay.active { opacity: 1; pointer-events: auto; }
+
+#choice-container {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.7); display: none; 
+    flex-direction: column; justify-content: center; align-items: center; gap: 20px; 
+    z-index: 2000; pointer-events: auto;
+}
+.choice-btn {
+    background: linear-gradient(90deg, #111 0%, #222 50%, #111 100%);
+    border: 2px solid var(--primary-gold); color: #ddd; padding: 20px 60px;
+    font-family: 'Zen Old Mincho', serif; font-size: 1.4rem; cursor: pointer;
+    width: 60%; max-width: 800px; text-align: center; transition: all 0.3s ease;
+    box-shadow: 0 0 15px rgba(0,0,0,0.8); position: relative;
+}
+.choice-btn::before { content: "◆"; position: absolute; left: 20px; color: var(--primary-gold); opacity: 0; transition: opacity 0.3s; }
+.choice-btn:hover { background: #333; color: var(--primary-gold); transform: scale(1.02); border-color: #fff; }
+.choice-btn:hover::before { opacity: 1; }
+
+/* --- 地圖介面 (關鍵修復) --- */
+/* 這裡必須設定 pointer-events: none，否則預設會擋住點擊 */
+#map-screen {
+    position: fixed; /* ★ 改為 fixed，無視父容器 */
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0, 0, 0, 0.95); /* 加深背景，更有沉浸感 */
+    z-index: 2000; /* ★ 提高層級，確保蓋在遊戲畫面上 */
+    
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.5s;
+}
+#map-screen.active { opacity: 1; pointer-events: auto; }
+#map-screen.active { opacity: 1; pointer-events: auto; }
+
+/* 使用 auto-fit 讓格子自動排列，避免跑版 */
+.map-grid {
+    display: grid; 
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); 
+    gap: 20px;
+    width: 85%; max-width: 1100px;
+}
+.map-card {
+    position: relative; aspect-ratio: 16/9; 
+    border: 2px solid #444; cursor: pointer; overflow: hidden;
+    transition: all 0.3s;
+}
+.map-card img { width: 100%; height: 100%; object-fit: cover; transition: 0.5s; }
+.map-card:hover { border-color: var(--primary-gold); transform: translateY(-5px); box-shadow: 0 5px 20px rgba(197, 160, 89, 0.3); }
+.map-card:hover img { transform: scale(1.1); filter: brightness(1.2); }
+.map-label {
+    position: absolute; bottom: 0; left: 0; width: 100%;
+    background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+    padding: 10px 0; text-align: center;
+    color: #fff; font-family: 'Zen Old Mincho', serif; font-size: 1.2rem;
+    text-shadow: 0 2px 4px #000; pointer-events: none;
+}
+.map-card.locked { filter: grayscale(100%); opacity: 0.5; cursor: not-allowed; border-color: #333; }
+.map-card.locked::after { content: "🔒"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; }
+
+/* --- 系統按鈕 --- */
+#system-controls { position: absolute; top: 20px; right: 20px; z-index: 100; display: flex; gap: 10px; pointer-events: auto; }
+#notebook-controls { position: absolute; top: 20px; left: 20px; z-index: 100; display: flex; gap: 15px; pointer-events: auto; }
+.sys-btn { width: 45px; height: 45px; background: rgba(0,0,0,0.8); border: 1px solid var(--primary-gold); color: var(--primary-gold); border-radius: 50%; display: flex; justify-content: center; align-items: center; cursor: pointer; font-family: 'Cinzel', serif; font-size: 1.2rem; transition: all 0.3s; }
+.sys-btn:hover { background: var(--primary-gold); color: #000; }
+
+/* Toast */
+#toast-layer {
+    position: fixed;  /* 必須是 fixed */
+    top: 15%; 
+    left: 0; 
+    width: 100%; 
+    z-index: 9999;    /* ★ 直接改到最高 9999，保證蓋過所有東西 */
+    display: flex; 
+    justify-content: center; 
+    pointer-events: none; 
+}
+.toast-msg {
+    background: rgba(0, 0, 0, 0.9); 
+    border: 1px solid var(--primary-gold);
+    color: var(--primary-gold); 
+    padding: 15px 40px; 
+    margin-bottom: 10px;
+    font-family: 'Zen Old Mincho', serif; 
+    font-size: 1.4rem;
+    box-shadow: 0 5px 20px rgba(0,0,0,0.8);
+    animation: fadeUp 3s forwards; 
+    opacity: 0; 
+    pointer-events: auto; /* 訊息本身可以阻擋點擊 (選填) */
+}@keyframes fadeUp {
+    0% { opacity: 0; transform: translateY(20px); }
+    10% { opacity: 1; transform: translateY(0); }
+    90% { opacity: 1; transform: translateY(0); }
+    100% { opacity: 0; transform: translateY(-20px); }
+}
+/* Start & Reveal */
+#start-screen { background: transparent; z-index: 50; } 
+.title { font-family: 'IM Fell English SC', serif; font-size: 5rem; color: var(--primary-gold); text-shadow: 0 4px 10px rgba(0,0,0,0.8); margin:0; }
+.subtitle { font-family: 'Cinzel', serif; font-size: 1rem; color: #666; letter-spacing: 6px; margin-bottom: 30px; border-top: 1px solid #333; border-bottom: 1px solid #333; padding: 5px 20px; }
+
+/* 揭露畫面背景 */
+#reveal-screen { 
+    background: radial-gradient(circle, #222 0%, #000 90%); 
+    z-index: 40; 
+}
+
+.reveal-container {
+    position: relative; 
+    width: 100%; height: 100%; 
+    display: flex; justify-content: center; align-items: flex-end;
+    overflow: hidden; /* 防止動畫跑出框框 */
+}
+
+/* --- 棺材動畫設定 --- */
+.coffin-wrapper { 
+    position: absolute; 
+    height: 110%; width: auto; aspect-ratio: 462/882; /* 維持棺材比例 */
+    bottom: -5%; /* 稍微下沉 */
+    left: 50%; transform: translateX(-50%); /* 水平置中 */
+    z-index: 1; 
+    animation: floatCoffin 6s ease-in-out infinite; /* 懸浮動畫 */
+}
+
+.coffin-img { 
+    width: 100%; height: 100%; 
+    object-fit: contain; 
+    filter: grayscale(100%) brightness(0.6) contrast(1.5); 
+}
+
+/* 棺材發光層 */
+.coffin-glow { 
+    position: absolute; top: 50%; left: 50%; 
+    transform: translate(-50%, -50%); 
+    width: 80%; height: 80%; 
+    background: inherit; filter: blur(60px); 
+    opacity: 0.6; z-index: -1; 
+    animation: pulse 3s infinite alternate; /* 呼吸燈效果 */
+}
+
+.coffin-tint { 
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; 
+    mix-blend-mode: overlay; opacity: 0.8; 
+    mask-image: url('https://files.catbox.moe/z13cx0.png'); 
+    -webkit-mask-image: url('https://files.catbox.moe/z13cx0.png'); 
+    -webkit-mask-size: contain; mask-size: contain; 
+    -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; 
+    -webkit-mask-position: center; mask-position: center; 
+}
+
+/* --- 角色飄出動畫 (關鍵) --- */
+.char-reveal-sprite { 
+    position: absolute; 
+    height: 95%; bottom: 0; left: 50%; 
+    
+    /* 初始狀態：
+       1. translateX(-50%) 確保水平置中
+       2. translateY(30px) 稍微往下沉一點點就好，不要太深
+       3. 這裡移除了 scale(0.9)，避免「彈跳」感 */
+    transform: translateX(-50%) translateY(30px); 
+    
+    opacity: 0; 
+    z-index: 2; 
+    pointer-events: none;
+    
+    /* 轉場設定：
+       改用 'ease-out' (緩出)，時間拉長到 2.5 秒
+       這會產生一種「慢慢顯影」的感覺 */
+    transition: opacity 0.5s ease-out, transform 1.5s ease-out; 
+}
+
+/* 當 JS 加入 .revealed 類別時的狀態 */
+.char-reveal-sprite.revealed { 
+    opacity: 1; 
+    /* 結束狀態：回到原位 translateY(0) */
+    transform: translateX(-50%) translateY(0); 
+    
+    /* 進入後的持續動畫：
+       呼吸效果延遲 2.5 秒後才開始，讓它等完全浮現後再開始呼吸 */
+    animation: breathe 6s ease-in-out infinite 2.5s; 
+}
+
+/* 呼吸動畫微調 (讓它更輕微，不要太明顯) */
+@keyframes breathe { 
+    0%, 100% { transform: translateX(-50%) scale(1); } 
+    50% { transform: translateX(-50%) scale(1.015); } /* 縮放幅度改小 */
+}
+
+/* 左側資訊卡 */
+.info-card { 
+    position: absolute; 
+    bottom: 40px; left: 60px; 
+    width: 380px; 
+    background: linear-gradient(90deg, rgba(0,0,0,0.95) 0%, rgba(20,20,20,0.5) 100%); 
+    border-left: 5px solid var(--primary-gold); 
+    padding: 25px 30px; 
+    z-index: 5; 
+    
+    /* 初始狀態：往左偏移，透明 */
+    transform: translateX(-50px); 
+    opacity: 0; 
+    transition: all 0.8s ease 0.5s; /* 延遲 0.5 秒出現 */
+}
+
+.info-card.show { 
+    transform: translateX(0); 
+    opacity: 1; 
+}
+
+.char-name { font-size: 3rem; color: var(--primary-gold); font-weight: 900; margin: 0; text-shadow: 2px 2px 4px #000; line-height: 1.1; }
+.char-role { font-size: 1.2rem; color: #ccc; font-family: 'IM Fell English SC', serif; display: block; margin: 5px 0 15px 0; letter-spacing: 2px; }
+.char-desc { font-size: 1.1rem; line-height: 1.6; color: #bbb; }
+
+/* --- 動畫關鍵影格 (Keyframes) --- */
+@keyframes floatCoffin { 
+    0%, 100% { transform: translateX(-50%) translateY(0); } 
+    50% { transform: translateX(-50%) translateY(-20px); } 
+}
+
+@keyframes breathe { 
+    0%, 100% { transform: translateX(-50%) scale(1); } 
+    50% { transform: translateX(-50%) scale(1.03); } 
+}
+
+@keyframes pulse { 
+    0%, 100% { opacity: 0.4; } 
+    50% { opacity: 0.8; } 
+}
+/* Modal 通用 */
+.modal-box { width: 70%; max-height: 85%; background: radial-gradient(circle, #2b2b2b 0%, #1a1a1a 100%); border: 3px double var(--primary-gold); padding: 0; display: flex; flex-direction: column; position: relative; box-shadow: 0 0 50px rgba(0,0,0,0.9); }
+.modal-header { flex-shrink: 0; padding: 15px; border-bottom: 1px solid rgba(197, 160, 89, 0.5); background: linear-gradient(90deg, transparent 0%, rgba(197, 160, 89, 0.2) 50%, transparent 100%); display: flex; justify-content: center; align-items: center; position: relative; }
+.modal-title { font-family: 'IM Fell English SC', serif; font-size: 2.2rem; color: var(--primary-gold); margin: 0; text-shadow: 0 2px 5px #000; letter-spacing: 2px;}
+.close-btn { position: absolute; top: 15px; right: 20px; background: none; border: none; color: #888; font-size: 2rem; cursor: pointer; line-height: 1; z-index: 10; transition: 0.3s; }
+.close-btn:hover { color: #fff; transform: rotate(90deg); }
+.modal-content { flex-grow: 1; overflow-y: auto; padding: 40px; scrollbar-width: thin; scrollbar-color: var(--primary-gold) #000; color: #ccc; }
+
+.clue-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+.clue-card { background: rgba(0, 0, 0, 0.6); border: 1px solid #444; border-left: 3px solid var(--primary-gold); padding: 15px; transition: 0.3s; }
+.clue-card:hover { border-color: var(--primary-gold); background: rgba(197, 160, 89, 0.1); transform: translateX(5px); }
+.clue-title { color: var(--primary-gold); font-weight: bold; font-size: 1.2rem; margin-bottom: 8px; border-bottom: 1px solid #444; padding-bottom: 5px; font-family: 'Zen Old Mincho', serif; }
+.clue-desc { font-size: 0.95rem; line-height: 1.5; color: #bbb; }
+.item-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; }
+.item-card { background: rgba(0,0,0,0.7); border: 1px solid #555; padding: 10px; text-align: center; transition: 0.3s; cursor: pointer; }
+.item-card:hover { border-color: var(--primary-gold); background: rgba(197, 160, 89, 0.1); }
+.item-icon { font-size: 2.5rem; margin-bottom: 5px; display: block; }
+.item-name { color: var(--primary-gold); font-size: 0.9rem; font-weight: bold; }
+.setting-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; padding: 10px; border-bottom: 1px solid rgba(197, 160, 89, 0.2); }
+.setting-row span { font-family: 'Zen Old Mincho', serif; font-size: 1.4rem; color: var(--primary-gold); }
+input[type=range] { -webkit-appearance: none; width: 50%; background: transparent; }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; height: 20px; width: 20px; border-radius: 50%; background: var(--primary-gold); cursor: pointer; margin-top: -8px; box-shadow: 0 0 10px rgba(197, 160, 89, 0.8); border: 2px solid #000; }
+input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; cursor: pointer; background: #444; border-radius: 2px; }
+
+/* Mobile */
+@media screen and (max-width: 768px) {
+    .title { font-size: 3rem; }
+    .gothic-input { width: 80%; }
+}
