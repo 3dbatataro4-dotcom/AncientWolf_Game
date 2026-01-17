@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>古堡狼人殺 - 賽勒涅莊園篇</title>
+    <link rel="icon" href="https://file.garden/aWe99vhwaGcNwkok/%E5%8F%A4%E5%A0%A1/icon.png" type="image/png">
+    
+    <meta name="mobile-web-app-capable" content="yes"> 
+    <meta name="apple-mobile-web-app-capable" content="yes"> 
+    <meta name="theme-color" content="#9E1F08"> 
+    
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=IM+Fell+English+SC&family=Zen+Old+Mincho:wght@400;700;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <div id="orientation-lock">
+        <div class="lock-icon">📱</div>
+        <p>請旋轉裝置以獲得最佳體驗</p>
+    </div>
+
+    <div id="scene-bg"></div>
+
+    <div id="game-container">
+        <audio id="bgm" loop></audio>
+        <audio id="sfx"></audio>
+        <audio id="sfx-click"><source src="https://files.catbox.moe/fqbgi9.mp3" type="audio/mpeg"></audio>
+
+        <div id="toast-layer"></div>
+
+        <div id="start-screen" class="layer interactive">
+            <h1 class="title">Ancient Wolf</h1>
+            <div class="subtitle">賽勒涅莊園</div>
+            <div style="display: flex; flex-direction: column; align-items: center; margin-top: 20px;">
+                <input type="text" id="player-name-input" class="gothic-input" placeholder="請輸入你的名字" maxlength="8">
+                <div style="display:flex; gap:20px;">
+                    <button class="gothic-btn" onclick="startGame('new')">開始遊戲</button>
+                    <button class="gothic-btn" id="load-btn-start" onclick="loadGame()" style="border-color:#888; color:#888;">讀取進度</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="reveal-screen" class="layer hidden interactive">
+            <div class="reveal-container" style="position:relative; width:100%; height:100%; display:flex; justify-content:center; align-items:flex-end;">
+                <div class="coffin-wrapper">
+                    <div id="coffin-glow" class="coffin-glow"></div>
+                    <img src="https://files.catbox.moe/z13cx0.png" class="coffin-img" alt="Coffin">
+                    <div id="coffin-tint" class="coffin-tint"></div>
+                </div>
+                <img id="partner-sprite" src="" class="char-reveal-sprite" alt="Character">
+                <div id="partner-info" class="info-card">
+                    <h2 id="partner-name" class="char-name">Name</h2>
+                    <span id="partner-title" class="char-role">Role</span>
+                    <p id="partner-desc" class="char-desc">Desc</p>
+                    <button class="gothic-btn" style="font-size: 0.9rem; padding: 10px 25px; margin-top:20px; border-color: #666;" onclick="enterGame()">Enter Manor</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="game-stage" class="layer hidden">
+            <div id="notebook-controls">
+                <div class="sys-btn" onclick="toggleNotebook()" title="筆記">📓</div>
+                <div class="sys-btn" onclick="toggleInventory()" title="背包">🎒</div>
+            </div>
+            <div id="system-controls">
+                <div class="sys-btn" onclick="toggleLog()" title="回顧">Log</div>
+                <div class="sys-btn" onclick="toggleMenu()" title="選單">≡</div>
+            </div>
+
+            <div id="char-layer">
+                <img id="char-left" class="char-slot left" src="">
+                <img id="char-center" class="char-slot center" src="">
+                <img id="char-right" class="char-slot right" src="">
+            </div>
+
+            <div id="dialogue-ui">
+                <div id="dialogue-box-inner" class="dialogue-box">
+                    <div id="name-tag-box" class="name-tag">
+                        <span id="speaker-name">???</span>
+                    </div>
+                    <div id="dialogue-text" class="dialogue-text">...</div>
+                    <div class="next-indicator"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="choice-container"></div>
+    
+    <div id="map-screen">
+        <h2 style="color:var(--primary-gold); font-family:'IM Fell English SC',serif; font-size:3rem; margin-bottom:30px;">Choose Location</h2>
+        <div class="map-grid" id="map-grid-content"></div>
+    </div>
+
+    <div id="menu-modal" class="modal-overlay">
+        <div class="modal-box settings-style">
+            <div class="modal-header">
+                <h2 class="modal-title">System Settings</h2>
+                <button class="close-btn" onclick="toggleMenu()">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="setting-row"><span>背景音樂 (BGM)</span><input type="range" min="0" max="1" step="0.1" value="0.5" onchange="updateVolume('bgm', this.value)"></div>
+                <div class="setting-row"><span>音效 (SFX)</span><input type="range" min="0" max="1" step="0.1" value="0.6" onchange="updateVolume('sfx', this.value)"></div>
+                <div class="setting-row"><span>字體大小</span><input type="range" min="16" max="28" step="1" value="20" onchange="updateFontSize(this.value)"></div>
+                <div style="margin-top:40px; display:flex; justify-content:center; gap:30px;">
+                    <button class="gothic-btn" onclick="saveGame()">保存進度</button>
+                    <button class="gothic-btn" onclick="loadGame(true)">讀取進度</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="log-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">Backlog</h2>
+                <button class="close-btn" onclick="toggleLog()">×</button>
+            </div>
+            <div id="log-content" class="modal-content"></div>
+        </div>
+    </div>
+
+    <div id="notebook-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">Investigation Notes</h2>
+                <button class="close-btn" onclick="toggleNotebook()">×</button>
+            </div>
+            <div id="clue-content" class="modal-content">
+                <div class="clue-grid" id="clue-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="inventory-modal" class="modal-overlay">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h2 class="modal-title">Inventory</h2>
+                <button class="close-btn" onclick="toggleInventory()">×</button>
+            </div>
+            <div class="modal-content">
+                <div class="item-grid" id="item-list"></div>
+            </div>
+        </div>
+    </div>
+
+<audio id="bgm-player" loop></audio>
+    <audio id="sfx-player"></audio>
+    <audio id="sfx-click" src="https://file.garden/aWe99vhwaGcNwkok/%E5%8F%A4%E5%A0%A1/sfx/click.mp3"></audio>
+
+    <script src="js/data.js"></script>
+    <script src="js/engine.js"></script>
+    <script src="js/story.js"></script>
+    <script src="js/stories/common.js"></script>
+</body>
+</html>
